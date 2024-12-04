@@ -7,30 +7,17 @@ export default class WidgetA extends BaseWidget {
   }
 
   async init() {
-    console.log(`${this.widgetName} is initializing.`);
+    const container = document.createElement('div');
+    container.className = 'content';
+    container.textContent += `Content added by ${this.widgetName}`;
 
-    // Ensure there is a dedicated container for WidgetA content
-    let container = this.target.querySelector('.widget-a-content');
-
-    // Create the container if it doesn't exist
-    if (!container) {
-      container = document.createElement('div');
-      container.className = 'widget-a-content';
-    }
-
-    // Insert the container before any existing child nodes (e.g., WidgetB)
-    const { firstChild } = this.target; // Get the first child (WidgetB in this case)
+    const { firstChild } = this.target;
     this.target.insertBefore(container, firstChild);
-
-    // Add content to the dedicated container
-    container.textContent = `Content added by ${this.widgetName}`;
-
-    // Call BaseWidget's init() for additional processing
     await super.init();
+    // We can remove the await super.init() if we are sure that parent class' init is empty or irrevelant to the child's behavior
   }
 
   destroy() {
-    console.log(`${this.widgetName} is being destroyed.`);
     super.destroy();
   }
 }

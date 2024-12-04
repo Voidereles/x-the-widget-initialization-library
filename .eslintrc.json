@@ -9,7 +9,6 @@
     {
       "files": ["*.js"],
       "env": {
-        "production": false
       },
       "rules": {
         "no-console": "off"
@@ -32,16 +31,20 @@
     "sourceType": "module"
   },
   "rules": {
-    "prettier/prettier": "error",
-    "no-console": "error",
-    "import/no-extraneous-dependencies": [
+    "prettier/prettier": [
       "error",
       {
-        "devDependencies": true,
         "endOfLine": "auto"
       }
     ],
-    "import/unambiguous": "off"
+    "no-console": "error", // Disallow console.logs
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true // Allow dev dependencies in certain files
+      }
+    ],
+    "import/unambiguous": "off" // Turn off ambiguous import rules
   },
   "settings": {
     "import/resolver": {

@@ -1,0 +1,80 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 10px 20px;
+}
+
+.main {
+    padding: 20px;
+    display:flex;
+    gap:2rem;
+
+    &>* {
+        flex: 1;
+        min-width: 0;
+    }
+
+}
+
+section {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#root {
+    div {
+        padding: 5px;
+        margin: 5px;
+        border: 1px solid #aaa;
+    }
+
+    [widget] {
+        background-color: #c6daec;
+        cursor:pointer;
+
+
+        &.widget-initialized {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        &.widget-failed {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+
+            [widget] {            
+                border-color: #dc3545;
+                background-color: #f8d7da;
+            }
+
+            [widget].selected {
+                background-color: #87a9c6;
+                border-color:#456078;
+            }
+        }
+
+        
+        &.selected {
+            background-color: #87a9c6;
+            border-color:#456078;
+        }
+    }
+    
+  
+    
+    #controls button {
+        margin-right: 10px;
+    }
+    
+    #info div {
+        margin: 5px 0;
+    }
+}
+

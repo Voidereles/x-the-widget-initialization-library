@@ -10,10 +10,10 @@ export default class WidgetC extends BaseWidget {
     console.log(`${this.widgetName} is initializing.`);
     this.target.innerHTML += `<div class="content">Content added by ${this.widgetName}</div>`;
     await super.init();
+    // We can remove the await super.init() if we are sure that parent class' init is empty or irrevelant to the child's behavior
   }
 
   destroy() {
-    console.log(`${this.widgetName} is being destroyed.`);
     super.destroy();
   }
 }

@@ -1,21 +1,61 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite.js Vanilla Template</title>
-  </head>
 
-  <body>
-    <div id="root">
-      <div widget="widgets/a">
-        <div widget="widgets/b"></div>
-        <div class="widget-a-content"></div> <!-- Reserved for WidgetA -->
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite.js Vanilla Template</title>
 
+</head>
+
+<body>
+  <header>
+    <h1>Widget Library Test Page</h1>
+  </header>
+
+  <main class="main">
+    <!-- Section 1: Test DOM Tree -->
+    <section id="test-tree">
+      <h2>Test DOM Tree</h2>
+
+      <div id="root">
+        <div widget="widgets/a">
+          <div>Regular Node 1</div>
+          <div widget="widgets/b">
+            <div>Regular Node 2</div>
+            <div>Regular Node 3</div>
+          </div>
+
+        </div>
+        <div widget="widgets/c"></div>
+
+
+        <div>Regular Node 4</div>
       </div>
-      <div widget="widgets/c"></div>
+
+    </section>
+
+    <div>
+      <!-- Section 2: Action Buttons -->
+      <section id="controls">
+        <h2>Actions</h2>
+        <button id="init">Init</button>
+        <button id="destroy">Destroy</button>
+        <button id="done">Done</button>
+        <button id="fail">Fail</button>
+      </section>
+
+      <!-- Section 3: Info -->
+      <div id="info">
+        <h2>Info</h2>
+        <div id="selectedNodeInfo"></div>
+      </div>
+
     </div>
-    <script type="module" src="/src/js/main.js"></script>
-  </body>
+
+  </main>
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+
 </html>

@@ -4,7 +4,7 @@ class X {
     this.activeInitializations = new Map(); // Tracks active initialization processes
 
     // Use import.meta.glob to pre-register all potential widget modules
-    this.widgetModules = import.meta.glob('./widgets/*.js'); // Adjust path as needed
+    this.widgetModules = import.meta.glob('./widgets/*.js');
 
     // Resolver that uses the pre-registered modules
     this.resolver = async (widgetPath) => {
@@ -29,9 +29,6 @@ class X {
 
   // Tracks the active initialization processes
   signalWidgetStart(widgetInstance) {
-    // Check if the widget is managed by X
-    console.log(this.widgetsMap);
-    console.log(!this.widgetsMap);
     if (!this.widgetsMap.has(widgetInstance.target)) {
       throw new Error('Widget instance is not managed by X.');
     }
@@ -50,11 +47,11 @@ class X {
         try {
           // Call the widget's signalInitStart method if it exists
           if (typeof widgetInstance.signalInitStart === 'function') {
-            await widgetInstance.signalInitStart(); // The widget begins its initialization
+            await widgetInstance.signalInitStart();
           }
-          resolve(); // Successfully resolved
+          resolve();
         } catch (error) {
-          reject(error); // Handle any errors during initialization
+          reject(error);
         }
       })();
     });
@@ -64,32 +61,38 @@ class X {
   }
 
   // Called when the widget signals that its initialization is complete
-  signalWidgetComplete(widgetInstance) {
-    // Ensure that the widget is in the active initialization state
-    if (!this.activeInitializations.has(widgetInstance.target)) {
-      throw new Error(
-        'Widget initialization was not started or already completed.',
+  signalWidgetComplete(widgetInstance, error = null) {
+    const widget = widgetInstance.target;
+
+    // Ensure the widget is actively being initialized
+    if (!this.activeInitializations.has(widget)) {
+      console.warn(
+        `Widget ${widget.getAttribute('widget')} completion signal ignored: not actively initializing.`,
       );
+      return;
     }
 
-    // const initPromise = this.activeInitializations.get(widgetInstance.target);
-    // console.log(initPromise);
+    // Remove widget from active initialization tracking
+    this.activeInitializations.delete(widget);
 
-    // TODO: uncommenting it creates an error
-    // // Mark initialization as complete once the promise is finished
-    // initPromise.finally(() => {
-    //   // Call the widget's signalInitComplete method if it exists
-    //   if (typeof widgetInstance.signalInitComplete === 'function') {
-    //     widgetInstance.signalInitComplete(); // The widget signals it is fully initialized
-    //   }
-
-    //   // Clean up the active initialization map once it's done
-    //   this.activeInitializations.delete(widgetInstance.target);
-    // });
+    if (error) {
+      console.error(
+        `Widget ${widget.getAttribute('widget')} failed with error:`,
+        error,
+      );
+      widget.classList.remove('widget-done');
+      widget.classList.add('widget-failed');
+    } else {
+      // Handle success case
+      console.log(
+        `Widget ${widget.getAttribute('widget')} successfully completed.`,
+      );
+      widget.classList.remove('widget-failed');
+      widget.classList.add('widget-done');
+    }
   }
 
   async waitForParentInitialization(parent) {
-    // Wait asynchronously without using await in a loop.
     const checkInterval = 100; // Time to wait between checks in ms
 
     return new Promise((resolve) => {
@@ -98,7 +101,7 @@ class X {
           console.log(
             `Parent widget ${parent.getAttribute('widget')} is now initialized.`,
           );
-          resolve(); // Resolve the promise when the parent is initialized
+          resolve();
         } else {
           // Keep checking every checkInterval ms until the parent is initialized
           setTimeout(checkParentInitialization, checkInterval);
@@ -110,17 +113,29 @@ class X {
     });
   }
 
-  // Check if a widget is initialized
   isWidgetInitialized(widget) {
-    return this.widgetsMap.has(widget); // Checks if widget is in the map of initialized widgets
+    return this.widgetsMap.has(widget);
   }
 
   async init(root, callback) {
-    const widgets = root.querySelectorAll('[widget]'); // Select all widgets
+    const widgets = root.parentElement.querySelectorAll('[widget]');
+    console.log(`Widgets found for initialization:`, widgets);
+
     const initializedWidgets = new Set(); // Tracks widgets that are successfully initialized
     const failedWidgets = []; // Collect widgets that failed due to parent dependency
 
     const widgetPromises = Array.from(widgets).map(async (widget) => {
+      if (this.widgetsMap.has(widget)) {
+        console.log(
+          `Widget ${widget.getAttribute('widget')} is already initialized. Skipping.`,
+        );
+        return null; // Ensures only new widgets are initialized and avoids reinitializing widgets unnecessarily.
+      }
+
+      console.log(
+        `[DEBUG] Processing widget: ${widget.getAttribute('widget')}`,
+      );
+
       const parent = widget.parentElement
         ? widget.parentElement.closest('[widget]')
         : null;
@@ -134,7 +149,7 @@ class X {
         await this.waitForParentInitialization(parent);
       }
 
-      // If widget is already being initialized, skip it
+      // Protects against concurrent initialization attempts for the same widget.
       if (this.activeInitializations.has(widget)) {
         console.log(
           `Widget ${widget.getAttribute('widget')} is already being initialized.`,
@@ -237,30 +252,46 @@ class X {
     await Promise.all(failedWidgetPromises);
   }
 
-  destroy(root) {
-    const widgets = [...root.querySelectorAll('[widget]')].reverse(); // Traverse bottom-to-top
+  destroy(selectedWidget) {
+    if (this.widgetsMap.size === 0) {
+      console.warn('No widgets were initialized before calling destroy.');
+      return;
+    }
+    console.log(this.widgetsMap);
+
+    if (this.activeInitializations.has(selectedWidget)) {
+      this.activeInitializations.delete(selectedWidget);
+    }
+
+    const widgets = selectedWidget && [selectedWidget]; // Only destroy the specific widget passed
 
     widgets.forEach((widget) => {
-      // Cancel ongoing initialization if any
+      console.log(widget);
+
       if (this.activeInitializations.has(widget)) {
-        this.activeInitializations.delete(widget);
+        console.error(
+          `Widget ${widget} is still being initialized, cannot destroy yet.`,
+        );
       }
 
-      const instance = this.widgetsMap.get(widget); // Get widget instance
-      if (instance) {
-        // Check for destroy method
-        if (typeof instance.destroy !== 'function') {
-          console.warn(`Widget at ${widget} does not have a destroy method.`);
-        } else {
-          try {
-            instance.destroy(); // Call widget's destroy method
-          } catch (error) {
-            console.error(`Error while destroying widget at ${widget}:`, error);
-          }
-        }
+      const instance = this.widgetsMap.get(selectedWidget); // Get widget instance
 
-        // Remove widget from the map
-        this.widgetsMap.delete(widget);
+      try {
+        instance.destroy(); // Call widget's destroy method
+        selectedWidget.classList.remove(...selectedWidget.classList);
+        selectedWidget.querySelectorAll('.content').forEach((widgetContent) => {
+          widgetContent.remove();
+        });
+        this.widgetsMap.delete(selectedWidget);
+        selectedWidget.querySelectorAll('[widget]').forEach((childWidget) => {
+          this.widgetsMap.delete(childWidget);
+        });
+        console.log(this.widgetsMap);
+      } catch (error) {
+        console.error(
+          `Error while destroying widget at ${selectedWidget}:`,
+          error,
+        );
       }
     });
   }
